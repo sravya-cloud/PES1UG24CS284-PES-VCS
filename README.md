@@ -375,8 +375,12 @@ The test program verifies:
 - Integrity checking (detects corrupted objects)
 
 **📸 Screenshot 1A:** Output of `./test_objects` showing all tests passing.
+### Screenshot 1A
+![1A](1A.png)
 
 **📸 Screenshot 1B:** `find .pes/objects -type f` showing the sharded directory structure.
+### Screenshot 1B
+![1B](1B.jpeg)
 
 ---
 
@@ -407,9 +411,13 @@ The test program verifies:
 - Deterministic serialization (same entries in any order → identical output)
 
 **📸 Screenshot 2A:** Output of `./test_tree` showing all tests passing.
+### Screenshot 2A
+![2A](2A.jpeg)
+
 
 **📸 Screenshot 2B:** Pick a tree object from `find .pes/objects -type f` and run `xxd .pes/objects/XX/YYY... | head -20` to show the raw binary format.
-
+### Screenshot 2B
+![2B](2B.jpeg)
 ---
 
 ## Phase 3: The Index (Staging Area)
@@ -465,8 +473,12 @@ cat .pes/index    # Human-readable text format
 ```
 
 **📸 Screenshot 3A:** Run `./pes init`, `./pes add file1.txt file2.txt`, `./pes status` — show the output.
+### Screenshot 3A
+![3A](3A.jpeg)
 
 **📸 Screenshot 3B:** `cat .pes/index` showing the text-format index with your entries.
+### Screenshot 3B
+![3B](3B.jpeg)
 
 ---
 
@@ -517,10 +529,16 @@ make test-integration
 
 **📸 Screenshot 4A:** Output of `./pes log` showing three commits with hashes, authors, timestamps, and messages.
 
+### Screenshot 4A
+![4A](4A.jpeg)
 **📸 Screenshot 4B:** `find .pes -type f | sort` showing object store growth after three commits.
+### Screenshot 4B
+![4B](4B.jpeg)
+
 
 **📸 Screenshot 4C:** `cat .pes/refs/heads/main` and `cat .pes/HEAD` showing the reference chain.
-
+### Screenshot 4C
+![4C](4C.jpeg)
 ---
 
 ## Phase 5 & 6: Analysis-Only Questions
