@@ -10,6 +10,7 @@
 //   "100644 hello.txt\0" followed by 32 raw bytes of SHA-256
 
 #include "tree.h"
+#include "index.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -132,6 +133,94 @@ int tree_serialize(const Tree *tree, void **data_out, size_t *len_out) {
 int tree_from_index(ObjectID *id_out) {
     // TODO: Implement recursive tree building
     // (See Lab Appendix for logical steps)
-    (void)id_out;
+    Index index;
+if (index_load(&index) != 0) return -1;
+
+Tree tree;
+tree.count = 0;
+
+// Temporary structure for directory grouping
+typedef struct {
+    char name[256];
+    Tree subtree;
+} DirEntry;
+
+DirEntry dirs[MAX_TREE_ENTRIES];
+int dir_count = 0;
+
+for (int i = 0; i < index.count; i++) {
+    IndexEntry *entry = &index.entries[i];
+
+    char *slash = strchr(entry->path, '/');
+
+    if (!slash) {
+        // File in root
+        TreeEntry *t = &tree.entries[tree.count++];
+        t->mode = entry->mode;
+        strcpy(t->name, entry->path);
+        t->hash = entry->hash;
+    } else {
+        // Directory case
+        char dirname[256];
+        int len = slash - entry->path;
+        strncpy(dirname, entry->path, len);
+        dirname[len] = '\0';
+
+        // Check if dir already exists
+        int found = -1;
+        for (int j = 0; j < dir_count; j++) {
+            if (strcmp(dirs[j].name, dirname) == 0) {
+                found = j;
+                break;
+            }
+        }
+
+        if (found == -1) {
+            found = dir_count++;
+            strcpy(dirs[found].name, dirname);
+            dirs[found].subtree.count = 0;
+        }
+
+        // Add file inside subtree
+        TreeEntry *sub = &dirs[found].subtree.entries[dirs[found].subtree.count++];
+        sub->mode = entry->mode;
+        strcpy(sub->name, slash + 1);
+        sub->hash = entry->hash;
+    }
+}
+
+// Write subtrees first
+for (int i = 0; i < dir_count; i++) {
+    void *data;
+    size_t len;
+    ObjectID sub_id;
+
+    if (tree_serialize(&dirs[i].subtree, &data, &len) != 0) return -1;
+
+    if (object_write(OBJ_TREE, data, len, &sub_id) != 0) {
+        free(data);
+        return -1;
+    }
+
+    free(data);
+
+    TreeEntry *t = &tree.entries[tree.count++];
+    t->mode = MODE_DIR;
+    strcpy(t->name, dirs[i].name);
+    t->hash = sub_id;
+}
+
+// Serialize root tree
+void *data;
+size_t len;
+
+if (tree_serialize(&tree, &data, &len) != 0) return -1;
+
+if (object_write(OBJ_TREE, data, len, id_out) != 0) {
+    free(data);
     return -1;
+}
+
+free(data);
+return 0;
 }
